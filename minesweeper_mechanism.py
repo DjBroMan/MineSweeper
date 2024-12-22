@@ -1,7 +1,8 @@
 import random as rd
+from minesweeper_block import Block
 
 # Global mine percentage
-mine_percentage = 0.123  # Approximately 12.3% of grid cells will have mines
+mine_percentage = 0.2  # Approximately 12.3% of grid cells will have mines
 
 def check_around(row: int, col: int, grid: list):
     """
@@ -110,3 +111,25 @@ class MineSweeperMechanism:
         print("Final Minesweeper Grid with Numbers:")
         for row in self.minesweeper_grid:
             print(row)
+
+    def flood_fill(self,row_no,col_no,block_list:list[list[Block]]):
+        """check if the selected block is a 0 and if it is, flood fill the adjacent blocks"""
+
+        l1 = [row_no-1,row_no,row_no+1]
+        l2 = [col_no-1,col_no,col_no+1]
+        
+        block_list[row_no][col_no].revealed=True
+
+        if self.minesweeper_grid[row_no][col_no]==0:
+            for i in l1:
+                for j in l2:
+                    try:
+                        print(block_list[i][j].revealed,"at ",i,j)
+                        if block_list[i][j].revealed == False and self.minesweeper_grid!='M':
+                            block_list[i][j].revealed = True
+                            print(self.minesweeper_grid[i][j])
+                            if self.minesweeper_grid[i][j] == 0:
+                                print("in second if block")
+                                self.flood_fill(i,j,block_list)
+                    except IndexError:
+                        pass

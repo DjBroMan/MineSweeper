@@ -1,10 +1,10 @@
 from tkinter import *
 from PIL import Image, ImageTk  # For image resizing
-from testcode2 import MineSweeperMechanism
+from minesweeper_mechanism import MineSweeperMechanism
 from minesweeper_block import Block
 
 # Set grid size (can be changed dynamically)
-GRID = 10  # Maximum recommended size is 18
+GRID = 18  # Maximum recommended size is 18
 
 # Block size (width and height in pixels)
 BLOCK_WIDTH = 30
@@ -16,6 +16,7 @@ class MineSweeperInterface:
         Initialize the Minesweeper game interface.
         Creates the main window, sets up the game grid, loads images, and initializes blocks.
         """
+        print("Initializing MineSweeperInterface...")  # Print statement
         self.window = Tk()
         self.window.title("MineSweeper")
 
@@ -48,9 +49,11 @@ class MineSweeperInterface:
             image_path = f"images/numbers/{i}.png"
             self.numbers[i] = self.load_and_resize_image(image_path)
         self.numbers['M'] = self.load_and_resize_image("images/numbers/mine.png")
+        self.numbers["flag"] = self.load_and_resize_image("images/background.png")
         
         # Background images for block states
-        self.white_background = self.load_and_resize_image("images/White background.png")
+        self.background = self.load_and_resize_image("images/background.png")
+        self.default = self.load_and_resize_image("images/White background.png")
 
         # Initialize grid blocks
         self.blocks = []
@@ -60,8 +63,8 @@ class MineSweeperInterface:
                 # Create each block with button and configuration
                 block = Block(
                     window=self.window,
-                    background=self.white_background,
-                    command=self.show_number,
+                    background=self.background,
+                    command=self.flood,
                     block_height=BLOCK_HEIGHT,
                     block_width=BLOCK_WIDTH,
                     row_no=i,
@@ -79,24 +82,39 @@ class MineSweeperInterface:
 
         # Start the Tkinter main loop
         self.window.mainloop()
-        
+
     def load_and_resize_image(self, path):
         """
         Load and resize an image to fit the button dimensions.
         """
+        print(f"Loading and resizing image: {path}")  # Print statement
         original_image = Image.open(path)
         resized_image = original_image.resize((BLOCK_WIDTH, BLOCK_HEIGHT), Image.LANCZOS)
         return ImageTk.PhotoImage(resized_image)
     
+    def flood(self, r, c):
+        print(f"Flood fill initiated at ({r}, {c})")  # Print statement
+        self.show_number(r,c)
+        self.mechanism.flood_fill(r, c, self.blocks)
+        self.reveal_the_revealed()
+    
+    def reveal_the_revealed(self):
+        print("Revealing all the revealed blocks...")  # Print statement
+        for i in range(GRID):
+            for j in range(GRID):
+                if self.blocks[i][j].revealed:
+                    self.show_number(i, j)
+
     def show_number(self, r, c):
         """
         Display the number or mine image on a block after being clicked.
         """
+        print(f"Showing number at block ({r}, {c})")  # Print statement
         if not self.mechanism.first_move_played:
             self.played_first_move(r, c)
         
         number = self.mechanism.minesweeper_grid[r][c]
-        number_image = self.numbers.get(number, self.white_background)  # Default to white if number not found
+        number_image = self.numbers.get(number, self.default)  # Default to white if number not found
 
         # Update the button to display the number image and disable further clicks
         self.blocks[r][c].button.config(
@@ -114,18 +132,21 @@ class MineSweeperInterface:
         """
         Handle logic for the first move, ensuring no mines are in the initial clicked area.
         """
+        print(f"First move played at ({row_no}, {col_no})")  # Print statement
         self.mechanism.move_played(row_no, col_no)
 
     def dummy_function(self, r: int, c: int) -> None:
         """
         Dummy function to prevent further clicks on an already revealed block.
         """
+        print(f"Dummy function called at ({r}, {c})")  # Print statement
         pass
 
     def display_all_blocks(self, r, c):
         """
         Display all blocks by showing their numbers or state when triggered.
         """
+        print("Displaying all blocks...")  # Print statement
         for i in range(GRID):
             for j in range(GRID):
                 if not self.blocks[i][j].revealed:  # Only show the number if not revealed
